@@ -1,6 +1,6 @@
 #Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, session, request, redirect, url_for, jsonify
 from flask_mysqldb import MySQL
 app = Flask(__name__)
 
@@ -23,16 +23,24 @@ def after_request(response):
     print("despues de la peticion")
     return response
 
+# Configuración de la clave secreta para las sesiones
+app.secret_key = 'una_clave_secreta_aqui'
+
 @app.route('/')
-def index():
-    numeros = [1,2,3,4]
-    data = {
-        'titulo': 'index',
-        'bienvenida': 'saludo',
-        'numeros' : numeros,
-        'cantidad_numeros': len(numeros)
-    }
-    return render_template('index.html', data=data)
+def landing():
+     # Verifica si el usuario está autenticado en la sesión
+    if 'usuario' in session:
+        return f"Hola {session['usuario']}! Estás logueado."
+    return '¡Hola, visitante! Por favor inicia sesión.'
+
+    # numeros = [1,2,3,4]
+    # data = {
+    #     'titulo': 'index',
+    #     'bienvenida': 'saludo',
+    #     'numeros' : numeros,
+    #     'cantidad_numeros': len(numeros)
+    # }
+    # return render_template('index.html', data=data)
 
 @app.route('/contacto/<nombre>/<int:edad>')
 def contacto(nombre, edad):
@@ -65,7 +73,8 @@ def login():
             user = cursor.fetchone()
 
             if(user):
-                return "Login exitoso"
+                session['usuario'] = correo
+                return redirect(url_for('home'))
             else:
                 return "Correo o contraseña equivocado"
         except Exception as ex:
@@ -76,6 +85,18 @@ def login():
 
     return render_template('login.html')
 
+@app.route('/logout')
+def logout():
+    # Elimina el nombre de usuario de la sesión
+    session.pop('usuario', None)
+    return redirect(url_for('index'))
+
+@app.route('/home')
+def home():
+
+    usuario = session['usuario']
+
+    return render_template('home.html', data=usuario)
 
 @app.route('/cursos')
 def listar_cursos():
