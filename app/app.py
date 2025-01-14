@@ -31,7 +31,7 @@ def landing():
      # Verifica si el usuario está autenticado en la sesión
     if 'usuario' in session:
         return f"Hola {session['usuario']}! Estás logueado."
-    return '¡Hola, visitante! Por favor inicia sesión.'
+    return redirect(url_for('login'))
 
     # numeros = [1,2,3,4]
     # data = {
